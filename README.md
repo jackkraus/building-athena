@@ -45,3 +45,6 @@ Here I added
 + Database/AthenaPOOL/AthenaPoolCnvSvc/
 ```
 to the end. 
+
+
+Now in order to run this with a modified version of ROOT, I need to have a separate shell open specifically for building and changing ROOT. Once that's done, I can source ROOT' in the Athena-built shell and run the derivation job
