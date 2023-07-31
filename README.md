@@ -1,13 +1,59 @@
-- You can clone [athena](https://gitlab.cern.ch/atlas/athena),
-- checkout a nightly, let’s say `git checkout nightly/master/2023-06-27T2101` (which is the latest as of today),
-- then in a build directory setup that nightly `lsetup "asetup Athena,master,2023-06-27T2101"` , 
-- then in athena comment out the lines above, build `AthenaPoolCnvSvc` w/ the change, 
-- then source the setup script so that your version of the code gets picked up (you can put a print statement in the python code to make sure).
+# Introduction
+
+This is a way for me to keep track of everything I'm doing. If this helps someone else out, great!
 
 Pretty much all of this is explained in [https://atlassoftwaredocs.web.cern.ch/gittutorial/](https://atlassoftwaredocs.web.cern.ch/gittutorial/)
 
+# 0. Preliminary Tasks
+
+- In a fresh terminal, clone [athena](https://gitlab.cern.ch/atlas/athena),
+
+```
+git clone https://gitlab.cern.ch/atlas/athena.git
+```
+
+Add the upstream
+```
+cd athena
+git remote add upstream https://:@gitlab.cern.ch:8443/atlas/athena.git # or any other valid URL
+```
+
+- Checkout a nightly:
+```
+git checkout nightly/master/2023-06-27T2101
+```
+
+- Setup that nightly 
+```
+lsetup "asetup Athena,master,2023-06-27T2101"
+```
+
+- Comment out the lines: https://gitlab.cern.ch/atlas/athena/-/blob/main/Database/AthenaPOOL/AthenaPoolCnvSvc/python/PoolWriteConfig.py#L114-117
+![[Pasted image 20230731101441.png]]
+
+
+---
+
+# 1. Sparse Build `AthenaPoolCnvSvc` w/ the change, 
+
+
 Specifically, building changes made in Athena looks like this
+```
+mkdir ../build && cd ../build  # Assuming you start in the root
+                               # of your git clone, but in fact
+                               # you can do this anywhere outside
+                               # the source area
+asetup main,latest,Athena
+```
+
+
 ![[Pasted image 20230722161011.png]]
+
+```
+cp ../athena/Projects/WorkDir/package_filters_example.txt ../package_filters.txt
+vim ../package_filters.txt
+```
+
 
 where in ``package_filters.txt`` we see something like: 
 ```
@@ -35,16 +81,122 @@ where in ``package_filters.txt`` we see something like:
 
 #
 + Control/AthenaExamples/AthExHelloWorld
-+ Database/AthenaPOOL/AthenaPoolCnvSvc/
++ Database/AthenaPOOL/AthenaPoolCnvSvc
 - .*
 
 ```
 
 Here I added 
 ```
-+ Database/AthenaPOOL/AthenaPoolCnvSvc/
++ Database/AthenaPOOL/AthenaPoolCnvSvc
 ```
 to the end. 
 
 
-Now in order to run this with a modified version of ROOT, I need to have a separate shell open specifically for building and changing ROOT. Once that's done, I can source ROOT' in the Athena-built shell and run the derivation job
+Run CMake 
+```
+cmake -DATLAS_PACKAGE_FILTER_FILE=../package_filters.txt ../athena/Projects/WorkDir >& cmakelog
+make -j
+```
+
+---
+# 2. Building ROOT with changes
+
+Clone ROOT and checkout the correct tag:
+```
+git clone git@github.com:root-project/root.git;
+cd root;
+git checkout tags/v6-26-08;
+cd ..;
+```
+if this doesn't work right away, make sure you're connected to github using ssh see [[Connecting to Github via SSH]]
+
+
+then build/install ROOT w/ these options:
+```
+mkdir build;
+mkdir install;
+cd build;
+lsetup "asetup none,gcc11,cmakesetup --cmakeversion=3.24.3";
+$(which cmake) \
+  -DCMAKE_CXX_STANDARD=17 \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_INSTALL_PREFIX=../install \
+  -Droot7=ON \
+  -Dpyroot=ON \
+  -DPYTHON_EXECUTABLE=/cvmfs/atlas-nightlies.cern.ch/repo/sw/main_Athena_x86_64-centos7-gcc11-opt/sw/lcg/releases/LCG_102b_ATLAS_21/Python/3.9.12/x86_64-centos7-gcc11-opt/bin/python \
+  -Dxrootd=ON \
+  -DXROOTD_ROOT_DIR=/cvmfs/atlas-nightlies.cern.ch/repo/sw/main_Athena_x86_64-centos7-gcc11-opt/sw/lcg/releases/LCG_102b_ATLAS_21/xrootd/5.4.3/x86_64-centos7-gcc11-opt \
+  -Dsqlite=OFF \
+  -Dbuiltin_lz4=ON \
+  -Dbuiltin_pcre=ON \
+  -Dbuiltin_xxhash=ON \
+  -Dbuiltin_ftgl=ON \
+  -Dbuiltin_afterimage=ON \
+  -Dbuiltin_glew=ON \
+  -Dbuiltin_unuran=ON \
+  -Dbuiltin_zstd=ON \
+  -Dcintex=ON \
+  -Ddavix=ON \
+  -Dexceptions=ON \
+  -Dexplicitlink=ON \
+  -Dfftw3=ON \
+  -Dgdml=ON \
+  -Dgsl_shared=ON \
+  -Dhttp=ON \
+  -Dgenvector=ON \
+  -Dvc=ON \
+  -Dmathmore=ON \
+  -Dminuit2=ON \
+  -Dmysql=ON \
+  -Dopengl=ON \
+  -Dpgsql=OFF \
+  -Dpythia6=OFF \
+  -Dpythia8=OFF \
+  -Dreflex=ON \
+  -Dr=OFF \
+  -Droofit=ON \
+  -Dssl=ON \
+  -Dunuran=ON \
+  -Dfortran=ON \
+  -Dxft=ON \
+  -Dxml=ON \
+  -Dzlib=ON \
+  ../root;
+cmake --build . >& cmakelog-root;
+make install >& makelog-root;
+```
+
+
+---
+
+# 3. Sourcing and Running Derivation Job
+
+- In a new shell, source the setup script so that your version of the code gets picked up (you can put a print statement in the python code to make sure).
+```
+mkdir run && cd run
+source ../build/x86_64-centos7-gcc11-opt/setup.sh
+```
+
+Sourcing ROOT from part (2)
+```
+lsetup "asetup Athena,main,latest"
+export "ROOTSYS=/data/akraus/projectS/install" # or any installation path you choose
+export LD_LIBRARY_PATH=$ROOTSYS/lib:$LD_LIBRARY_PATH
+export PYTHONPATH=$ROOTSYS/lib:$PYTHONPATH
+export PATH=$ROOTSYS/bin:$PATH
+```
+
+then run the derivation job
+
+```
+Derivation_tf.py \
+  --CA 'True' \
+  --maxEvents '1000' \
+  --inputAODFile '/eos/atlas/atlascerngroupdisk/proj-spot/spot-job-inputs/AODtoDAOD/data22/myAOD.pool.root' \
+  --outputDAODFile 'pool.root' \
+  --formats 'PHYS'
+```
+
+That should leave logs 
+
