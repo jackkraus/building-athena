@@ -80,7 +80,6 @@ where in ``package_filters.txt`` we see something like:
 # So in that case you should not bother with using such a filter file.
 
 #
-+ Control/AthenaExamples/AthExHelloWorld
 + Database/AthenaPOOL/AthenaPoolCnvSvc
 - .*
 
@@ -110,6 +109,8 @@ git checkout tags/v6-26-08;
 cd ..;
 ```
 if this doesn't work right away, make sure you're connected to github using ssh see [[Connecting to Github via SSH]]
+
+This is where you can modify ROOT code
 
 
 then build/install ROOT w/ these options:
