@@ -115,6 +115,7 @@ def PoolWriteCfg(flags):
             PoolAttributes += [ pah.setFileCompLvl( fileName, compLvl ) ]
 
             # By default use a maximum basket buffer size of 128k and minimum buffer entries of 10 for (D)AODs
+            print("jackwashere??\n")
             # if "AOD" in stream:
             #     PoolAttributes += [ pah.setMaxBufferSize( fileName, "131072" ) ]
             #     PoolAttributes += [ pah.setMinBufferEntries( fileName, "10" ) ]
