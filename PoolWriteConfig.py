@@ -116,7 +116,7 @@ def PoolWriteCfg(flags):
 
             # By default use a maximum basket buffer size of 128k and minimum buffer entries of 10 for (D)AODs
             print("jackwashere??\n")
-             if "AOD" in stream:
+            if "AOD" in stream:
                 #PoolAttributes += [ pah.setMaxBufferSize( fileName, "131072" ) ]
                 
                 #   In ROOT Optimization investigations, this tells ROOT to, after '10' 
