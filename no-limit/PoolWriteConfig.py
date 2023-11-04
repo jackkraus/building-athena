@@ -113,8 +113,6 @@ def PoolWriteCfg(flags):
             # Set the Compression attributes
             PoolAttributes += [ pah.setFileCompAlg( fileName, compAlg ) ]
             PoolAttributes += [ pah.setFileCompLvl( fileName, compLvl ) ]
-
-            printf("jackwashere?\n")
             # By default use a maximum basket buffer size of 128k and minimum buffer entries of 10 for (D)AODs
             if "AOD" in stream:
                 # PoolAttributes += [ pah.setMaxBufferSize( fileName, "131072" ) ]
