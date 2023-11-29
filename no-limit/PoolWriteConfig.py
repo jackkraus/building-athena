@@ -113,11 +113,10 @@ def PoolWriteCfg(flags):
             # Set the Compression attributes
             PoolAttributes += [ pah.setFileCompAlg( fileName, compAlg ) ]
             PoolAttributes += [ pah.setFileCompLvl( fileName, compLvl ) ]
-            # By default use a maximum basket buffer size of 128k and minimum buffer entries of 10 for (D)AODs
+
+            # By default use no maximum basket buffer size and minimum buffer entries of 10 for (D)AODs
             if "AOD" in stream:
                 # PoolAttributes += [ pah.setMaxBufferSize( fileName, "131072" ) ]
-                #   In ROOT Optimization investigations, this tells ROOT to, after '10' 
-                #   events (i.e. during learning phase) resize the basksets to hold at least '10 entries
                 PoolAttributes += [ pah.setMinBufferEntries( fileName, "10" ) ]
         else:
             # Changes in this else block need to be coordinated w/ OutputStreamConfig!
@@ -160,5 +159,5 @@ def PoolWriteCfg(flags):
     return AthenaPoolCnvSvcCfg(flags,
                                PoolAttributes=PoolAttributes,
                                ParallelCompression=useParallelCompression,
-                               StorageTechnology=flags.Output.StorageTechnology,
+                               StorageTechnology=flags.Output.StorageTechnology.EventData,
                                OutputMetadataContainers=OutputMetadataContainers)

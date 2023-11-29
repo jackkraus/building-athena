@@ -114,9 +114,9 @@ def PoolWriteCfg(flags):
             PoolAttributes += [ pah.setFileCompAlg( fileName, compAlg ) ]
             PoolAttributes += [ pah.setFileCompLvl( fileName, compLvl ) ]
 
-            # By default use a maximum basket buffer size of 128k and minimum buffer entries of 10 for (D)AODs
+            # By default use a maximum basket buffer size of 256k and minimum buffer entries of 10 for (D)AODs
             if "AOD" in stream:
-                PoolAttributes += [ pah.setMaxBufferSize( fileName, "262144" ) ] # 256k basket size
+                PoolAttributes += [ pah.setMaxBufferSize( fileName, "262144" ) ]
                 PoolAttributes += [ pah.setMinBufferEntries( fileName, "10" ) ]
         else:
             # Changes in this else block need to be coordinated w/ OutputStreamConfig!
@@ -159,5 +159,5 @@ def PoolWriteCfg(flags):
     return AthenaPoolCnvSvcCfg(flags,
                                PoolAttributes=PoolAttributes,
                                ParallelCompression=useParallelCompression,
-                               StorageTechnology=flags.Output.StorageTechnology,
+                               StorageTechnology=flags.Output.StorageTechnology.EventData,
                                OutputMetadataContainers=OutputMetadataContainers)
