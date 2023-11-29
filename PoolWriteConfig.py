@@ -116,7 +116,7 @@ def PoolWriteCfg(flags):
 
             # By default use a maximum basket buffer size of 128k and minimum buffer entries of 10 for (D)AODs
             if "AOD" in stream:
-                # PoolAttributes += [ pah.setMaxBufferSize( fileName, "131072" ) ]
+                PoolAttributes += [ pah.setMaxBufferSize( fileName, "131072" ) ]
                 #   In ROOT Optimization investigations, this tells ROOT to, after '10' 
                 #   events (i.e. during learning phase) resize the basksets to hold at least '10 entries
                 PoolAttributes += [ pah.setMinBufferEntries( fileName, "10" ) ]
