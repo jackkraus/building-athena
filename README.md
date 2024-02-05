@@ -1,203 +1,154 @@
-# Introduction
+The following script can be found in this repository at `setup-athena.sh`
 
-This is a way for me to keep track of everything I'm doing. If this helps someone else out, great!
-
-Pretty much all of this is explained in [https://atlassoftwaredocs.web.cern.ch/gittutorial/](https://atlassoftwaredocs.web.cern.ch/gittutorial/)
-
-# 0. Preliminary Tasks
-
-- In a fresh terminal, clone [athena](https://gitlab.cern.ch/atlas/athena),
+This creates directories to setup the various configurations of Athena (default at 128kB basket, no-limit size basket, 256kB basket size, and 512kB basket size). I know it's a bit cumbersome and ugly but it proved easier than without it. 
 
 ```
-git clone https://gitlab.cern.ch/atlas/athena.git
-```
+#!/bin/bash
 
-Add the upstream
-```
-cd athena
-git remote add upstream https://:@gitlab.cern.ch:8443/atlas/athena.git # or any other valid URL
-```
+# Create directories
+mkdir athena-default;
+mkdir athena-no-limit;
+mkdir athena-256k-basket;
+mkdir athena-512k-basket;
 
-- Checkout a nightly:
-```
-git checkout nightly/master/2023-06-27T2101
-```
-
-- Setup that nightly 
-```
-lsetup "asetup Athena,master,2023-06-27T2101"
-```
-
-- Comment out the lines: https://gitlab.cern.ch/atlas/athena/-/blob/main/Database/AthenaPOOL/AthenaPoolCnvSvc/python/PoolWriteConfig.py#L114-117
-![[Pasted image 20230731101441.png]]
-
-
----
-
-# 1. Sparse Build `AthenaPoolCnvSvc` w/ the change, 
-
-
-Specifically, building changes made in Athena looks like this
-```
-mkdir ../build && cd ../build  # Assuming you start in the root
-                               # of your git clone, but in fact
-                               # you can do this anywhere outside
-                               # the source area
-asetup main,latest,Athena
-```
-
-
-![[Pasted image 20230722161011.png]]
-
-```
-cp ../athena/Projects/WorkDir/package_filters_example.txt ../package_filters.txt
-vim ../package_filters.txt
-```
-
-
-where in ``package_filters.txt`` we see something like: 
-```
-#
-# This is an example file for setting up which packages to pick up
-# for a sparse build, when you have a full checkout of the repository,
-# but only wish to rebuild some packages.
-#
-# The syntax is very simple:
-#
-# + REGEXP will include the package in the build
-# - REGEXP will exclude the package from the build
-#
-# The first match against the package path wins, so list
-# more specific matches above more general ones.
-#
-# In your build/ directory you can now do e.g:
-# cmake -DATLAS_PACKAGE_FILTER_FILE=../package_filters.txt ../athena/Projects/WorkDir
-# (where obviously you have put your package_filters.txt file in the same directory as build/..)
-# Complete instructions are found here: https://atlassoftwaredocs.web.cern.ch/gittutorial/git-develop/#setting-up-to-compile-and-test-code-for-the-tutorial
-#
-# Note that when you use git-atlas to make a sparse checkout, you will
-# only have the packages available that you want to compile anyway.
-# So in that case you should not bother with using such a filter file.
-
-#
-+ Database/AthenaPOOL/AthenaPoolCnvSvc
-- .*
-
-```
-
-Here I added 
-```
-+ Database/AthenaPOOL/AthenaPoolCnvSvc
-```
-to the end. 
-
-
-Run CMake 
-```
-cmake -DATLAS_PACKAGE_FILTER_FILE=../package_filters.txt ../athena/Projects/WorkDir >& cmakelog
-make -j
-```
-
----
-# 2. Building ROOT with changes
-
-Clone ROOT and checkout the correct tag:
-```
-git clone git@github.com:root-project/root.git;
-cd root;
-git checkout tags/v6-26-08;
+# Clone and setup for athena-default
+cd athena-default;
+git clone https://gitlab.cern.ch/akraus/athena.git;
+cd athena;
+git remote add upstream https://:@gitlab.cern.ch:8443/atlas/athena.git ;
+git fetch --all;
+git checkout release/24.0.16 ; 
 cd ..;
-```
-if this doesn't work right away, make sure you're connected to github using ssh see [[Connecting to Github via SSH]]
+git clone https://github.com/arthurkraus3/building-athena.git;
+rm athena/Database/AthenaPOOL/AthenaPoolCnvSvc/python/PoolWriteConfig.py;
+mv building-athena/PoolWriteConfig.py athena/Database/AthenaPOOL/AthenaPoolCnvSvc/python/;
+mv building-athena/package_filters.txt .;
+mkdir build && cd build ; 
+lsetup "asetup Athena,24.0.16" ; 
+cmake -DATLAS_PACKAGE_FILTER_FILE=../package_filters.txt ../athena/Projects/WorkDir/ >& cmakelog;
+make -j >& makelog;
+cd ..
 
-This is where you can modify ROOT code
+# Clone and setup for athena-no-limit
+cd athena-no-limit;
+git clone https://gitlab.cern.ch/akraus/athena.git;
+cd athena;
+git remote add upstream https://:@gitlab.cern.ch:8443/atlas/athena.git ;
+git fetch --all;
+git checkout release/24.0.16 ; 
+cd ..;
+git clone https://github.com/arthurkraus3/building-athena.git;
+rm athena/Database/AthenaPOOL/AthenaPoolCnvSvc/python/PoolWriteConfig.py;
+mv building-athena/no-limit/PoolWriteConfig.py athena/Database/AthenaPOOL/AthenaPoolCnvSvc/python/;
+mv building-athena/package_filters.txt .;
+mkdir build && cd build ; 
+lsetup "asetup Athena,24.0.16" ; 
+cmake -DATLAS_PACKAGE_FILTER_FILE=../package_filters.txt ../athena/Projects/WorkDir/ >& cmakelog;
+make -j >& makelog;
+cd ..
 
+# Clone and setup for athena-256k-basket
+cd athena-256k-basket;
+git clone https://gitlab.cern.ch/akraus/athena.git;
+cd athena;
+git remote add upstream https://:@gitlab.cern.ch:8443/atlas/athena.git ;
+git fetch --all;
+git checkout release/24.0.16 ; 
+cd ..;
+git clone https://github.com/arthurkraus3/building-athena.git;
+rm athena/Database/AthenaPOOL/AthenaPoolCnvSvc/python/PoolWriteConfig.py;
+mv building-athena/256k-basket/PoolWriteConfig.py athena/Database/AthenaPOOL/AthenaPoolCnvSvc/python/;
+mv building-athena/package_filters.txt .;
+mkdir build && cd build ; 
+lsetup "asetup Athena,24.0.16" ; 
+cmake -DATLAS_PACKAGE_FILTER_FILE=../package_filters.txt ../athena/Projects/WorkDir/ >& cmakelog;
+make -j >& makelog;
+cd ..
 
-then build/install ROOT w/ these options:
-```
-mkdir build;
-mkdir install;
-cd build;
-lsetup "asetup none,gcc11,cmakesetup --cmakeversion=3.24.3";
-$(which cmake) \
-  -DCMAKE_CXX_STANDARD=17 \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_INSTALL_PREFIX=../install \
-  -Droot7=ON \
-  -Dpyroot=ON \
-  -DPYTHON_EXECUTABLE=/cvmfs/atlas-nightlies.cern.ch/repo/sw/main_Athena_x86_64-centos7-gcc11-opt/sw/lcg/releases/LCG_102b_ATLAS_21/Python/3.9.12/x86_64-centos7-gcc11-opt/bin/python \
-  -Dxrootd=ON \
-  -DXROOTD_ROOT_DIR=/cvmfs/atlas-nightlies.cern.ch/repo/sw/main_Athena_x86_64-centos7-gcc11-opt/sw/lcg/releases/LCG_102b_ATLAS_21/xrootd/5.4.3/x86_64-centos7-gcc11-opt \
-  -Dsqlite=OFF \
-  -Dbuiltin_lz4=ON \
-  -Dbuiltin_pcre=ON \
-  -Dbuiltin_xxhash=ON \
-  -Dbuiltin_ftgl=ON \
-  -Dbuiltin_afterimage=ON \
-  -Dbuiltin_glew=ON \
-  -Dbuiltin_unuran=ON \
-  -Dbuiltin_zstd=ON \
-  -Dcintex=ON \
-  -Ddavix=ON \
-  -Dexceptions=ON \
-  -Dexplicitlink=ON \
-  -Dfftw3=ON \
-  -Dgdml=ON \
-  -Dgsl_shared=ON \
-  -Dhttp=ON \
-  -Dgenvector=ON \
-  -Dvc=ON \
-  -Dmathmore=ON \
-  -Dminuit2=ON \
-  -Dmysql=ON \
-  -Dopengl=ON \
-  -Dpgsql=OFF \
-  -Dpythia6=OFF \
-  -Dpythia8=OFF \
-  -Dreflex=ON \
-  -Dr=OFF \
-  -Droofit=ON \
-  -Dssl=ON \
-  -Dunuran=ON \
-  -Dfortran=ON \
-  -Dxft=ON \
-  -Dxml=ON \
-  -Dzlib=ON \
-  ../root;
-cmake --build . >& cmakelog-root;
-make install >& makelog-root;
-```
-
-
----
-
-# 3. Sourcing and Running Derivation Job
-
-- In a new shell, source the setup script so that your version of the code gets picked up (you can put a print statement in the python code to make sure).
-```
-mkdir run && cd run
-source ../build/x86_64-centos7-gcc11-opt/setup.sh
+# Clone and setup for athena-512k-basket
+cd athena-512k-basket;
+git clone https://gitlab.cern.ch/akraus/athena.git;
+cd athena;
+git remote add upstream https://:@gitlab.cern.ch:8443/atlas/athena.git ;
+git fetch --all;
+git checkout release/24.0.16 ; 
+cd ..;
+git clone https://github.com/arthurkraus3/building-athena.git;
+rm athena/Database/AthenaPOOL/AthenaPoolCnvSvc/python/PoolWriteConfig.py;
+mv building-athena/package_filters.txt .;
+mkdir build && cd build ; 
+lsetup "asetup Athena,24.0.16" ; 
+cmake -DATLAS_PACKAGE_FILTER_FILE=../package_filters.txt ../athena/Projects/WorkDir/ >& cmakelog;
+make -j >& makelog;
+cd ..
 ```
 
-Sourcing ROOT from part (2)
+**Keep in mind**, you still have to navigate to the respective `athena-configuration/build`  and sourcing by 
 ```
-lsetup "asetup Athena,main,latest"
-export "ROOTSYS=/data/akraus/projectS/install" # or any installation path you choose
-export LD_LIBRARY_PATH=$ROOTSYS/lib:$LD_LIBRARY_PATH
-export PYTHONPATH=$ROOTSYS/lib:$PYTHONPATH
-export PATH=$ROOTSYS/bin:$PATH
+asetup --restore
+source x86_64-centos7-gcc11-opt/setup.sh
+``` 
+before running any derivation job.
+
+The scripts to download and run the derivation jobs start here: 
+
+### Run Data Script (Source before transform commands)
+```
+#!/bin/bash
+
+#retrieve inputs
+
+rucio download data22_13p6TeV:AOD.31407809._000896.pool.root.1
+ln -fs data22_13p6TeV/AOD.31407809._000896.pool.root.1 ./AOD.31407809._000896.pool.root.1
+rucio download data22_13p6TeV:AOD.31407809._000898.pool.root.1
+ln -fs data22_13p6TeV/AOD.31407809._000898.pool.root.1 ./AOD.31407809._000898.pool.root.1
+rucio download data22_13p6TeV:AOD.31407809._000894.pool.root.1
+ln -fs data22_13p6TeV/AOD.31407809._000894.pool.root.1 ./AOD.31407809._000894.pool.root.1
+rucio download data22_13p6TeV:AOD.31407809._000895.pool.root.1
+ln -fs data22_13p6TeV/AOD.31407809._000895.pool.root.1 ./AOD.31407809._000895.pool.root.1
+
+#transform commands
+
+
+# !!!! IMPORTANT !!!!
+# Go to the respective athena /build directory that you've created/want to test and run 'asetup --restore'
+# !!!! IMPORTANT !!!!
+
+
+export ATHENA_PROC_NUMBER=8
+export ATHENA_CORE_NUMBER=8
+Derivation_tf.py --inputAODFile="AOD.31407809._000894.pool.root.1,AOD.31407809._000895.pool.root.1,AOD.31407809._000896.pool.root.1,AOD.31407809._000898.pool.root.1" --athenaMPMergeTargetSize "DAOD_*:0" --multiprocess True --sharedWriter True --formats PHYS PHYSLITE --outputDAODFile 34859516._000364.pool.root.1 --multithreadedFileValidation True --AMITag p5858 --CA "all:True"
 ```
 
-then run the derivation job
+
+### Run MC Script (Source before transform commands)
+```
+#!/bin/bash
+
+#retrieve inputs
+
+rucio download mc23_13p6TeV:AOD.33799166._000303.pool.root.1
+ln -fs mc23_13p6TeV/AOD.33799166._000303.pool.root.1 ./AOD.33799166._000303.pool.root.1
+rucio download mc23_13p6TeV:AOD.33799166._000304.pool.root.1
+ln -fs mc23_13p6TeV/AOD.33799166._000304.pool.root.1 ./AOD.33799166._000304.pool.root.1
+rucio download mc23_13p6TeV:AOD.33799166._000305.pool.root.1
+ln -fs mc23_13p6TeV/AOD.33799166._000305.pool.root.1 ./AOD.33799166._000305.pool.root.1
+rucio download mc23_13p6TeV:AOD.33799166._000306.pool.root.1
+ln -fs mc23_13p6TeV/AOD.33799166._000306.pool.root.1 ./AOD.33799166._000306.pool.root.1
+rucio download mc23_13p6TeV:AOD.33799166._000307.pool.root.1
+ln -fs mc23_13p6TeV/AOD.33799166._000307.pool.root.1 ./AOD.33799166._000307.pool.root.1
+rucio download mc23_13p6TeV:AOD.33799166._000308.pool.root.1
+ln -fs mc23_13p6TeV/AOD.33799166._000308.pool.root.1 ./AOD.33799166._000308.pool.root.1
+
+#transform commands
+
+# !!!! IMPORTANT !!!!
+# Go to the respective athena /build directory that you've created/want to test and run 'asetup --restore'
+# !!!! IMPORTANT !!!!
+
+
+export ATHENA_PROC_NUMBER=8
+export ATHENA_CORE_NUMBER=8
+Derivation_tf.py --inputAODFile="AOD.33799166._000303.pool.root.1,AOD.33799166._000304.pool.root.1,AOD.33799166._000305.pool.root.1,AOD.33799166._000306.pool.root.1,AOD.33799166._000307.pool.root.1,AOD.33799166._000308.pool.root.1" --athenaMPMergeTargetSize "DAOD_*:0" --multiprocess True --postExec "default:if ConfigFlags.Concurrency.NumProcs>0: cfg.getService(\"AthMpEvtLoopMgr\").ExecAtPreFork=[\"AthCondSeq\"];" --sharedWriter True --formats PHYS PHYSLITE --outputDAODFile 35010062._000389.pool.root.1 --multithreadedFileValidation True --AMITag p5855 --CA "all:True"
 
 ```
-Derivation_tf.py \
-  --CA 'True' \
-  --maxEvents '1000' \
-  --inputAODFile '/eos/atlas/atlascerngroupdisk/proj-spot/spot-job-inputs/AODtoDAOD/data22/myAOD.pool.root' \
-  --outputDAODFile 'pool.root' \
-  --formats 'PHYS'
-```
-
-That should leave logs 
-
