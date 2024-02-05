@@ -1,3 +1,5 @@
+# README
+
 The following script can be found in this repository at `setup-athena.sh`
 
 This creates directories to setup the various configurations of Athena (default at 128kB basket, no-limit size basket, 256kB basket size, and 512kB basket size). I know it's a bit cumbersome and ugly but it proved easier than without it. 
